@@ -1,4 +1,5 @@
 import "./globals.css";
+import MswWorker from "../components/MswWorker";
 
 export default function RootLayout({
   children,
@@ -8,6 +9,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
+        <MswWorker />
         {children}
       </body>
     </html>
