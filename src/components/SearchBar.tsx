@@ -1,27 +1,28 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback, memo } from 'react';
 import { SearchBarProps } from '@/types/components';
 
-export default function SearchBar({ onSearch, initialValue = '' }: SearchBarProps) {
+const SearchBar = memo(function SearchBar({ onSearch, initialValue = '' }: SearchBarProps) {
   const [query, setQuery] = useState<string>(initialValue);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setQuery(e.target.value);
-    if (!e.target.value) {
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setQuery(value);
+    if (!value) {
       onSearch({ query: '' });
     }
-  };
+  }, [onSearch]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     onSearch({ query });
-  };
+  }, [query, onSearch]);
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     setQuery('');
     onSearch({ query: '' });
-  };
+  }, [onSearch]);
 
   return (
     <div className="pt-2 pb-3">
@@ -61,4 +62,6 @@ export default function SearchBar({ onSearch, initialValue = '' }: SearchBarProp
       </form>
     </div>
   );
-}
+});
+
+export default SearchBar;

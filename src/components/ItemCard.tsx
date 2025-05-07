@@ -1,13 +1,21 @@
 'use client';
 
+import { memo } from 'react';
 import Image from 'next/image';
-import { ItemCardProps } from '@/types/components';
+import { Item } from '@/types/item';
 
-function ItemCard({ 
+interface ItemCardProps {
+  item: Item;
+  onFavoriteToggle: (item: Item) => void;
+  isFavorite: boolean;
+  isPriority?: boolean;
+}
+
+const ItemCard = memo(function ItemCard({ 
   item, 
   onFavoriteToggle, 
-  isFavorite = false,
-  isPriority = false
+  isFavorite, 
+  isPriority = false 
 }: ItemCardProps) {
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -51,5 +59,6 @@ function ItemCard({
       </div>
     </div>
   );
-}
+});
+
 export default ItemCard;

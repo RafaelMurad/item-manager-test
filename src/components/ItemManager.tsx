@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from 'react';
 import { Item } from '@/types/item';
 import ItemCard from './ItemCard';
 import SearchBar from './SearchBar';
-import FavoritesModal from './FavoritesModal';
+const FavoritesModal = lazy(() => import('./FavoritesModal'));
 import { useMsw } from './MswWorker';
 import { SearchParams } from '@/types/components';
 import type { ApiResponse, ApiErrorResponse } from '@/types/api';
@@ -86,12 +86,12 @@ export default function ItemManager() {
     fetchItems();
   }, [searchQuery, page, isMswReady]);
 
-  const handleSearch = (params: SearchParams) => {
+  const handleSearch = useCallback((params: SearchParams) => {
     setSearchQuery(params.query);
     setPage(1);
-  };
+  }, []);
 
-  const handleFavoriteToggle = (item: Item) => {
+  const handleFavoriteToggle = useCallback((item: Item) => {
     setFavorites((prevFavorites) => {
       const isAlreadyFavorite = prevFavorites.some(
         (favItem) => favItem.title === item.title && favItem.email === item.email
@@ -105,20 +105,26 @@ export default function ItemManager() {
         return [...prevFavorites, item];
       }
     });
-  };
+  }, []);
 
-  const isFavorite = (item: Item) => {
+  const isFavorite = useCallback((item: Item) => {
     return favorites.some(
       (favItem) => favItem.title === item.title && favItem.email === item.email
     );
-  };
+  }, [favorites]);
+
+  const displayItems = useMemo(() => items, [items]);
+  const favoritesCount = useMemo(() => favorites.length, [favorites]);
+
+  const getItemKey = useCallback((item: Item, index: number) => {
+    return `${item.title}-${item.email}-${item.price}-${index}`;
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="sticky top-0 z-20">
         <header className="bg-teal-600 text-white shadow-md">
           <div className="container mx-auto px-4 max-w-6xl">
-            {/* Desktop header */}
             <div className="hidden md:flex items-center justify-between h-16">
               <h1 className="text-xl font-bold">Wallapop</h1>
               <div className="max-w-xl w-full px-8">
@@ -128,14 +134,13 @@ export default function ItemManager() {
                 onClick={() => setIsModalOpen(true)}
                 className="flex items-center space-x-1 bg-white text-teal-600 rounded-full py-1.5 px-4 hover:bg-opacity-90 transition-colors"
               >
-                <svg className="w-5 h-5" fill={favorites.length > 0 ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <svg className="w-5 h-5" fill={favoritesCount > 0 ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                 </svg>
-                <span className="ml-1">Favorites ({favorites.length})</span>
+                <span className="ml-1">Favorites ({favoritesCount})</span>
               </button>
             </div>
 
-            {/* Mobile header */}
             <div className="md:hidden py-3">
               <div className="flex justify-between items-center mb-3">
                 <h1 className="text-xl font-bold">Wallapop</h1>
@@ -143,10 +148,10 @@ export default function ItemManager() {
                   onClick={() => setIsModalOpen(true)}
                   className="flex items-center space-x-1 bg-white text-teal-600 rounded-full py-1.5 px-4 hover:bg-opacity-90 transition-colors"
                 >
-                  <svg className="w-5 h-5" fill={favorites.length > 0 ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <svg className="w-5 h-5" fill={favoritesCount > 0 ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                   </svg>
-                  <span className="ml-1">Favorites ({favorites.length})</span>
+                  <span className="ml-1">Favorites ({favoritesCount})</span>
                 </button>
               </div>
               <SearchBar onSearch={handleSearch} initialValue={searchQuery} />
@@ -180,10 +185,10 @@ export default function ItemManager() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {items.map((item, index) => (
+          {displayItems.map((item, index) => (
             <div
-              key={`${item.title}-${index}`}
-              ref={index === items.length - 1 ? lastItemRef : null}
+              key={getItemKey(item, index)}
+              ref={index === displayItems.length - 1 ? lastItemRef : null}
             >
               <ItemCard
                 item={item}
@@ -236,12 +241,14 @@ export default function ItemManager() {
         </div>
       </footer>
 
-      <FavoritesModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        favorites={favorites}
-        onRemoveFavorite={handleFavoriteToggle}
-      />
+      <Suspense fallback={null}>
+        <FavoritesModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          favorites={favorites}
+          onRemoveFavorite={handleFavoriteToggle}
+        />
+      </Suspense>
     </div>
   );
 }

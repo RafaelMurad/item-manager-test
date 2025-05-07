@@ -1,9 +1,15 @@
 'use client';
 
+import { memo } from 'react';
 import Image from 'next/image';
 import { FavoritesModalProps } from '@/types/components';
 
-export default function FavoritesModal({ isOpen, onClose, favorites, onRemoveFavorite }: FavoritesModalProps) {
+const FavoritesModal = memo(function FavoritesModal({ 
+  isOpen, 
+  onClose, 
+  favorites, 
+  onRemoveFavorite 
+}: FavoritesModalProps) {
   if (!isOpen) return null;
 
   return (
@@ -74,4 +80,6 @@ export default function FavoritesModal({ isOpen, onClose, favorites, onRemoveFav
       </div>
     </div>
   );
-}
+});
+
+export default FavoritesModal;
