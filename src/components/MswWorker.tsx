@@ -1,26 +1,44 @@
-// components/MswWorker.tsx
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState, createContext, useContext } from 'react';
 
-export default function MswWorker() {
+export const MswContext = createContext<{
+  isMswReady: boolean;
+}>({
+  isMswReady: false,
+});
+
+export const useMsw = () => useContext(MswContext);
+
+export default function MswWorker({ children }: { children?: React.ReactNode }) {
+  const [isMswReady, setIsMswReady] = useState(false);
+
   useEffect(() => {
-    if (process.env.NODE_ENV !== 'development' || typeof window === 'undefined') {
-      return;
-    }
+    if (typeof window === 'undefined') return;
+    if (process.env.NODE_ENV !== 'development') return;
 
-    (async () => {
+    const enableMocking = async () => {
       try {
-        const { setupWorker } = await import('msw/browser');
-        const { handlers } = await import('../mocks/handlers');
-        const worker = setupWorker(...handlers);
-        await worker.start({ onUnhandledRequest: 'bypass' });
-        console.log('[MSW] Mocking enabled.');
-      } catch (err) {
-        console.error('[MSW] Failed to initialize:', err);
+        const { worker } = await import('@/mocks/browser');
+        await worker.start({
+          onUnhandledRequest: 'bypass',
+          serviceWorker: {
+            url: '/mockServiceWorker.js',
+          },
+        });
+        console.log('[MSW] Mock service worker started successfully!');
+        setIsMswReady(true);
+      } catch (error) {
+        console.error('[MSW] Failed to initialize MSW:', error);
       }
-    })();
+    };
+
+    enableMocking();
   }, []);
 
-  return null;
+  return (
+    <MswContext.Provider value={{ isMswReady }}>
+      {children}
+    </MswContext.Provider>
+  );
 }

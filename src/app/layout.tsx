@@ -9,8 +9,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        <MswWorker />
-        {children}
+        <MswWorker>
+          {children}
+        </MswWorker>
       </body>
     </html>
   );
