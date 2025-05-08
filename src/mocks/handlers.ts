@@ -1,7 +1,10 @@
 import { http, HttpResponse, type HttpHandler } from 'msw'
 import data from './data.json'
-import { Item } from '../types/item'
-import type { ApiResponse, ApiErrorResponse } from '../types/api'
+import { Item } from '@/types/item'
+import { ApiResponse, ApiErrorResponse } from '@/types/api'
+
+// Since the price is already a string in data.json, we can use Item directly
+const items: Item[] = data.items;
 
 // Utility functions for better separation of concerns
 const DEFAULT_LIMIT = 5
@@ -112,7 +115,7 @@ export const handlers: HttpHandler[] = [
       const { textTerms, priceFilters } = parseSearchQuery(query)
 
       // Filter items
-      const filteredItems = (data.items as Item[]).filter(item =>
+      const filteredItems = items.filter(item =>
         matchesTextSearch(item, textTerms) &&
         matchesPriceFilters(item, priceFilters)
       )

@@ -113,7 +113,6 @@ export default function ItemManager() {
     );
   }, [favorites]);
 
-  const displayItems = useMemo(() => items, [items]);
   const favoritesCount = useMemo(() => favorites.length, [favorites]);
 
   const getItemKey = useCallback((item: Item, index: number) => {
@@ -185,10 +184,10 @@ export default function ItemManager() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {displayItems.map((item, index) => (
+          {items.map((item, index) => (
             <div
               key={getItemKey(item, index)}
-              ref={index === displayItems.length - 1 ? lastItemRef : null}
+              ref={index === items.length - 1 ? lastItemRef : null}
             >
               <ItemCard
                 item={item}
